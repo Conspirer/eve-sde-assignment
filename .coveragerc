@@ -1,0 +1,11 @@
+# Settings for: pytest --cov
+[run]
+branch = True
+source = app, scripts
+
+[report]
+show_missing = True
+skip_empty = True
+exclude_also =
+    # the line that runs a script from the command line
+    if __name__ == .__main__.:

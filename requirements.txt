@@ -1,0 +1,25 @@
+# Web framework + server
+fastapi==0.142.1
+uvicorn[standard]==0.54.0
+
+# Database
+SQLAlchemy==2.1.1
+psycopg2-binary==2.9.13
+
+# Settings & validation
+pydantic==2.13.5
+pydantic-settings==2.15.0
+email-validator==2.3.0
+
+# Cache & rate limiting
+redis==8.1.0
+
+# Auth
+bcrypt==5.0.0
+PyJWT==2.15.1
+
+# Testing
+pytest==9.1.1
+httpx==0.28.1
+pytest-cov==7.1.0
+fakeredis==2.38.0
