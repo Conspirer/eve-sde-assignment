@@ -1,0 +1,48 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: eve
+      POSTGRES_PASSWORD: eve
+      POSTGRES_DB: eve
+    # No "ports:" here either: only the api container needs Postgres, so it
+    # can't clash with a Postgres already running on your machine.
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      # Runs once, on first start: creates the separate eve_test database.
+      - ./docker/init-test-db.sql:/docker-entrypoint-initdb.d/init-test-db.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U eve -d eve"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
+
+  redis:
+    image: redis:7-alpine
+    # No "ports:" here. Only the api container talks to Redis, over Docker's
+    # internal network, so it doesn't clash with a Redis already on your machine.
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
+
+  api:
+    build: .
+    environment:
+      DATABASE_URL: postgresql+psycopg2://eve:eve@db:5432/eve
+      JWT_SECRET: ${JWT_SECRET:-docker-dev-jwt-secret-change-me-please}
+      WEBHOOK_SECRET: ${WEBHOOK_SECRET:-dev-webhook-secret-change-me}
+      REDIS_URL: redis://redis:6379/0
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy   # wait until Postgres accepts connections
+      redis:
+        condition: service_healthy
+    # Seed sample data (safe to repeat), then start the server.
+    command: sh -c "python -m app.seed && uvicorn app.main:app --host 0.0.0.0 --port 8000"
+
+volumes:
+  pgdata:
